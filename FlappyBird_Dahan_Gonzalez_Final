@@ -1,0 +1,2725 @@
+#Enunciado
+#Recrear el juego de flappy bird en el simulador  de Mips Mars, 
+#donde el tablero debe tener un tamaño mínimo de 512x512 pixeles. 
+#El videojuego consiste en que el jugador controla mediante el teclado 
+#un pájaro intentando volar contra la gravedad entre las filas de tubería verdes 
+#sin tocarlas. El juego termina si el pájaro choca contra los tubos. 
+#Al finalizar se debe desplegar la puntuación total del jugador y 
+#permitir la opción de volver a jugar. 
+#El juego también debe poder pausarse a voluntad del usuario.
+
+#Display 512x512 pixeles
+
+#Utiliza W para saltar Space para pausar y "p" para salir de la pausa
+
+.data
+msgFin: .asciiz "Gracias por jugar! \nPuntaje total: "
+base:	.word 0x10000000
+msgFin2: .asciiz "¿Quieres volver a jugar?"
+#Colores
+verdePiso:  .word 	0x9ACD32
+marronTierra: .word 0xF5DA81
+verdeTubo: .word  0x04B404
+verdeBorde: .word 0x0B610B
+negro: .word 0x000000
+marronOscuro: .word 0x4E3B31
+amarilloPollito: .word 0xFFFF00
+blanco: .word 0xFFFFFF
+amarilloSombra: .word 0xDBA901
+naranjaPico: .word 0xFF4000
+azulCielo: .word 0x00BFFF
+nubeClaro: .word 0x70C4D1
+nubeOscuro: .word 0x0D6F7E
+
+.text
+li $t4, 0
+#Macros
+#Macro para pintar las filas del escenario
+.macro pintarFilas ($color,$fila,$numFilas)
+	li $t4, $numFilas
+loop1:	li $t3,128
+   loop2: 
+   	sw $color, 0($fila)
+	addi, $t3, $t3, -1
+	addi $fila, $fila, 4
+	bnez  $t3, loop2
+	addi $t4, $t4, -1
+	bnez $t4, loop1
+.end_macro 
+
+.macro buscarChoque($pos1, $color)
+	lw $t1, $color
+	move $t2,$pos1
+	addi $t2, $t2, 5632
+	lw $s1, ($t2)
+	beq $t1,$s1,final
+.end_macro
+
+.macro buscarChoqueTubo($pos1, $color)
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 4168
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 28
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 32
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 36
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 40
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 44
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 48
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 532
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 536
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 564
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 1080
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 1596
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 2108
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 2620
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 3136
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 3652
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 4160
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 4672
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5184
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5180
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5176
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5172
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5168
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5676
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5672
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5668
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5664
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5676
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5144
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+	lw $t1, $color
+	move $t2, $pos1
+	addi $t2, $t2, 5148
+	lw $s1, ($t2)
+	beq $t1, $s1, final
+	
+.end_macro
+
+.macro dibujarFlappy($pos1)
+
+	buscarChoque($pos1, marronOscuro)
+	buscarChoqueTubo($pos1, verdeBorde)
+	
+	#1era fila
+	lw $t1, negro
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,44($pos1)
+	sw $t1,48($pos1)
+	addi $pos1,$pos1,512
+	
+	#2da fila
+	sw $t1,20($pos1)
+	sw $t1,24($pos1)
+	sw $t1,44($pos1)
+	sw $t1,52($pos1)
+	
+	lw $t1, amarilloPollito
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	
+	lw $t1, blanco
+	sw $t1,48($pos1)
+	addi $pos1,$pos1,512
+	
+	#3era fila
+	lw $t1, negro
+	sw $t1,16($pos1)
+	sw $t1,40($pos1)
+	sw $t1,56($pos1)
+	
+	lw $t1, amarilloPollito
+	sw $t1,20($pos1)
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	
+	lw $t1, blanco
+	sw $t1,44($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	addi $pos1,$pos1,512
+	
+	#4ta fila
+	lw $t1, negro
+	sw $t1,8($pos1)
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,40($pos1)
+	sw $t1,52($pos1)
+	sw $t1,60($pos1)
+	
+	lw $t1, amarilloPollito
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	
+	lw $t1, blanco
+	sw $t1,44($pos1)
+	sw $t1,48($pos1)
+	sw $t1,56($pos1)
+	addi $pos1,$pos1,512
+	
+	#5ta fila
+	lw $t1, negro
+	sw $t1,4($pos1)
+	sw $t1,24($pos1)
+	sw $t1,40($pos1)
+	sw $t1,52($pos1)
+	sw $t1,60($pos1)
+	
+	lw $t1, amarilloPollito
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	
+	lw $t1, blanco
+	sw $t1,8($pos1)
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,44($pos1)
+	sw $t1,48($pos1)
+	sw $t1,56($pos1)
+	addi $pos1,$pos1,512
+	
+	#6ta fila
+	lw $t1, negro
+	sw $t1,4($pos1)
+	sw $t1,28($pos1)
+	sw $t1,44($pos1)
+	sw $t1,60($pos1)
+	
+	lw $t1, amarilloPollito
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	
+	lw $t1, blanco
+	sw $t1,8($pos1)
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,24($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	addi $pos1,$pos1,512
+	
+	#7ma fila
+	lw $t1, negro
+	sw $t1,4($pos1)
+	sw $t1,28($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	sw $t1,64($pos1)
+	
+	lw $t1, amarilloPollito
+	sw $t1,8($pos1)
+	sw $t1,24($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,44($pos1)
+	
+	lw $t1, blanco
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	addi $pos1,$pos1,512
+	
+	#8va fila
+	lw $t1, negro
+	sw $t1,8($pos1)
+	sw $t1,24($pos1)
+	sw $t1,44($pos1)
+	sw $t1,68($pos1)
+	
+	lw $t1, amarilloPollito
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	
+	lw $t1, naranjaPico
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	sw $t1,64($pos1)
+	addi $pos1,$pos1,512
+	
+	#9na fila
+	lw $t1, negro
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,40($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	sw $t1,64($pos1)
+	
+	lw $t1, naranjaPico
+	sw $t1,44($pos1)
+	
+	lw $t1, amarilloSombra
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	addi $pos1,$pos1,512
+	
+	#10ma Fila
+	lw $t1, negro
+	sw $t1,20($pos1)
+	sw $t1,44($pos1)
+	sw $t1,64($pos1)
+	
+	lw $t1, amarilloSombra
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	
+	lw $t1, naranjaPico
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	addi $pos1,$pos1,512
+	
+	#11va fila
+	lw $t1, negro
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	sw $t1,64($pos1)
+	
+	lw $t1, amarilloSombra
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,44($pos1)
+	addi $pos1,$pos1,512
+	
+	#12va fila
+	lw $t1, negro
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,44($pos1)
+	
+	addi $pos1,$pos1,-5632
+	
+.end_macro
+
+.macro borrarFlappy($pos1)
+	lw $t1,0($pos1)
+
+	#1era fila
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,44($pos1)
+	sw $t1,48($pos1)
+	addi $pos1,$pos1,512
+	
+	#2da fila
+	sw $t1,20($pos1)
+	sw $t1,24($pos1)
+	sw $t1,44($pos1)
+	sw $t1,52($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,48($pos1)
+	addi $pos1,$pos1,512
+	
+	#3era fila
+	sw $t1,16($pos1)
+	sw $t1,40($pos1)
+	sw $t1,56($pos1)
+	sw $t1,20($pos1)
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,44($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	addi $pos1,$pos1,512
+	
+	#4ta fila
+	sw $t1,8($pos1)
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,40($pos1)
+	sw $t1,52($pos1)
+	sw $t1,60($pos1)
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,44($pos1)
+	sw $t1,48($pos1)
+	sw $t1,56($pos1)
+	addi $pos1,$pos1,512
+	
+	#5ta fila
+	sw $t1,4($pos1)
+	sw $t1,24($pos1)
+	sw $t1,40($pos1)
+	sw $t1,52($pos1)
+	sw $t1,60($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,8($pos1)
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,44($pos1)
+	sw $t1,48($pos1)
+	sw $t1,56($pos1)
+	addi $pos1,$pos1,512
+	
+	#6ta fila
+	sw $t1,4($pos1)
+	sw $t1,28($pos1)
+	sw $t1,44($pos1)
+	sw $t1,60($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,8($pos1)
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,24($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	addi $pos1,$pos1,512
+	
+	#7ma fila
+	sw $t1,4($pos1)
+	sw $t1,28($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	sw $t1,64($pos1)
+	sw $t1,8($pos1)
+	sw $t1,24($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,44($pos1)
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	addi $pos1,$pos1,512
+	
+	#8va fila
+	sw $t1,8($pos1)
+	sw $t1,24($pos1)
+	sw $t1,44($pos1)
+	sw $t1,68($pos1)
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	sw $t1,64($pos1)
+	addi $pos1,$pos1,512
+	
+	#9na fila
+	sw $t1,12($pos1)
+	sw $t1,16($pos1)
+	sw $t1,20($pos1)
+	sw $t1,40($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	sw $t1,64($pos1)
+	sw $t1,44($pos1)
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	addi $pos1,$pos1,512
+	
+	#10ma Fila
+	sw $t1,20($pos1)
+	sw $t1,44($pos1)
+	sw $t1,64($pos1)
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	addi $pos1,$pos1,512
+	
+	#11va fila
+	sw $t1,24($pos1)
+	sw $t1,28($pos1)
+	sw $t1,48($pos1)
+	sw $t1,52($pos1)
+	sw $t1,56($pos1)
+	sw $t1,60($pos1)
+	sw $t1,64($pos1)
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,44($pos1)
+	addi $pos1,$pos1,512
+	
+	#12va fila
+	sw $t1,32($pos1)
+	sw $t1,36($pos1)
+	sw $t1,40($pos1)
+	sw $t1,44($pos1)
+	
+	addi $pos1,$pos1,-5632
+	
+.end_macro
+
+.macro borrarTuberiaSuperBaja($pos1)
+	lw $t1, azulCielo
+	loopTubo1:
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 31232, seguir
+	b loopTubo1
+	
+seguir:	
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,512
+	
+loopTubo2: 
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 34816, seguir2
+	b loopTubo2
+	
+seguir2: 
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,15360
+	
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1, $pos1, 512
+	
+loopTubo3: 
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 54272, seguir3
+	b loopTubo3
+	
+seguir3:
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,-54272
+.end_macro
+
+.macro dibujarTuberiaSuperBaja($pos1)
+	loopTubo1:
+	lw $t1, verdeBorde
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 31232, seguir
+	b loopTubo1
+	
+seguir:	
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,512
+	
+loopTubo2: 
+	lw $t1, verdeBorde
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 34816, seguir2
+	b loopTubo2
+	
+seguir2: 
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,15360
+	
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1, $pos1, 512
+	
+loopTubo3: 
+	lw $t1, verdeBorde
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 54272, seguir3
+	b loopTubo3
+	
+seguir3:
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,-54272
+	
+.end_macro
+
+.macro dibujarTuberiaBaja($pos1)
+	
+	#1era fila 
+   loopTubo1:
+	lw $t1, verdeBorde
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 22528, seguir
+	b loopTubo1
+	
+seguir:	
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,512
+	
+loopTubo2: 
+	lw $t1, verdeBorde
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 26624, seguir2
+	b loopTubo2
+	
+seguir2: 
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,15360
+	
+	#Tuberia de abajo
+	#1era fila
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1, $pos1, 512
+	
+loopTubo3: 
+	lw $t1, verdeBorde
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 45568, seguir3
+	b loopTubo3
+	
+seguir3:
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1, $pos1, 512
+	
+loopTubo4:#filas del tubo 9-29
+	#24 fila 
+	lw $t1, verdeBorde
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 54784, seguir4
+	b loopTubo4
+	
+seguir4:
+	addi $pos1,$pos1,-54784
+
+.end_macro
+
+.macro dibujarTuberiaArriba($pos1)
+loop2Tubo1:
+	lw $t1, verdeBorde
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 10240, seguir21
+	b loop2Tubo1
+seguir21:
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1, $pos1, 512
+	
+loop2Tubo2: 
+	lw $t1, verdeBorde
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 14336, seguir2
+	b loop2Tubo2
+	
+seguir2: 
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,15360
+
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,512
+
+loop2Tubo3:
+	lw $t1, verdeBorde
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 33792, seguir3
+	b loop2Tubo3
+seguir3:	
+	lw $t1, verdeBorde
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,512
+	
+loop2Tubo4:
+	lw $t1, verdeBorde
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	
+	lw $t1, verdeTubo
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 54784, seguir4
+	b loop2Tubo4
+seguir4:
+	addi $pos1,$pos1,-54784
+.end_macro
+
+.macro borrarTuberiaBaja($pos1)
+	lw $t1,azulCielo
+	
+loopTubo1:
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 22528, seguir
+	b loopTubo1
+	
+seguir:	
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,512
+	
+loopTubo2: 
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 26624, seguir2
+	b loopTubo2
+	
+seguir2: 
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,15360
+	
+	#Tuberia de abajo
+	#1era fila
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1, $pos1, 512
+	
+loopTubo3: 
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 45568, seguir3
+	b loopTubo3
+	
+seguir3:
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1, $pos1, 512
+	
+loopTubo4:#filas del tubo 9-29
+	#24 fila 
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 54784, seguir4
+	b loopTubo4
+	
+seguir4:
+
+	addi $pos1,$pos1,-54784
+
+.end_macro
+
+.macro  borrarTuberiaArriba ($pos1)
+	lw $t1, azulCielo
+loop2Tubo1:
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 10240, seguir21
+	b loop2Tubo1
+seguir21:
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1, $pos1, 512
+	
+loop2Tubo2: 
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 14336, seguir2
+	b loop2Tubo2
+	
+seguir2:
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,15360
+
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,512
+
+loop2Tubo3:
+	sw $t1, 4($pos1)
+	sw $t1, 132($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 12($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 33792, seguir3
+	b loop2Tubo3
+seguir3:	
+	sw $t1, 12($pos1)
+	sw $t1, 4($pos1)
+	sw $t1, 8($pos1)
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	sw $t1, 124($pos1)
+	sw $t1, 128($pos1)
+	sw $t1, 132($pos1)
+	
+	addi $pos1,$pos1,512
+	
+loop2Tubo4:
+	sw $t1, 16($pos1)
+	sw $t1, 120($pos1)
+	sw $t1, 20($pos1)
+	sw $t1, 24($pos1)
+	sw $t1, 28($pos1)
+	sw $t1, 32($pos1)
+	sw $t1, 36($pos1)
+	sw $t1, 40($pos1)
+	sw $t1, 44($pos1)
+	sw $t1, 48($pos1)
+	sw $t1, 52($pos1)
+	sw $t1, 56($pos1)
+	sw $t1, 60($pos1)
+	sw $t1, 64($pos1)
+	sw $t1, 68($pos1)
+	sw $t1, 72($pos1)
+	sw $t1, 76($pos1)
+	sw $t1, 80($pos1)
+	sw $t1, 84($pos1)
+	sw $t1, 88($pos1)
+	sw $t1, 92($pos1)
+	sw $t1, 96($pos1)
+	sw $t1, 100($pos1)
+	sw $t1, 104($pos1)
+	sw $t1, 108($pos1)
+	sw $t1, 112($pos1)
+	sw $t1, 116($pos1)
+	
+	addi $pos1,$pos1,512
+	
+	lw $t2, base
+	
+	sub $t2,$pos1, $t2
+	
+	bge $t2, 54784, seguir4
+	b loop2Tubo4
+seguir4:
+	addi $pos1,$pos1,-54784
+.end_macro
+
+
+.macro elegirTuberia()
+
+	li $a1, 3
+	li $v0, 42
+	syscall
+	move $s1,$a0
+	beq $s1, 0, crearTuberiaArriba
+	beq $s1, 2, crearTuberiaSuperBaja
+	
+	lw $t8,base
+	addi $t8,$t8,344
+	dibujarTuberiaBaja($t8)
+	li $s3, 0
+	b tuberiaLista
+		
+crearTuberiaArriba:
+	lw $t8,base
+	addi $t8,$t8,344
+	dibujarTuberiaArriba($t8)
+	li $s3, 1
+	b tuberiaLista
+	
+crearTuberiaSuperBaja:
+	lw $t8,base
+	addi $t8,$t8,344
+	dibujarTuberiaSuperBaja($t8)
+	li $s3, 2
+	b tuberiaLista
+	
+tuberiaLista:
+	
+	
+.end_macro
+
+.macro moverTuberia($tipo,$pos)
+	lw $t9, base
+	addi $t9, $t9, 8
+	move $s5, $pos
+	beq $tipo, 1, moverArriba
+	beq $tipo, 2, moverSuperBaja
+	beq $tipo, 3, seguir
+	blt $s5, $t9, borrarBaja
+	borrarTuberiaBaja($pos)
+	addi $pos, $pos, -4
+	dibujarTuberiaBaja($pos)
+	#///////////////////// Arreglos de escenario
+	#lw $t9,base
+	#addi $t9,$t9,54784 
+	#lw $s4,marronOscuro
+	#pintarFilas($s4,$t9,1)
+	#lw $t9,base
+	#addi $t9,$t9,55296 
+	#lw $s4,marronTierra
+	#pintarFilas($s4,$t9,20)
+	b seguir
+moverArriba:
+	blt $s5, $t9, borrarArriba
+	borrarTuberiaArriba($pos)
+	
+	addi $pos, $pos, -4
+	dibujarTuberiaArriba($pos)
+	#///////////////////// Arreglos de escenario
+	#lw $t9,base
+	#addi $t9,$t9,54784 
+	#lw $s4,marronOscuro
+	#pintarFilas($s4,$t9,1)
+	#lw $t9,base
+	#addi $t9,$t9,55296 
+	#lw $s4,marronTierra
+	#pintarFilas($s4,$t9,20)
+	b seguir
+	
+moverSuperBaja:
+	blt $s5, $t9, borrarSuperBaja
+	borrarTuberiaSuperBaja($pos)
+	
+	addi $pos, $pos, -4
+	dibujarTuberiaSuperBaja($pos)
+	b seguir
+
+borrarBaja:
+	addi $t5, $t5, 1
+	borrarTuberiaBaja($pos)
+	elegirTuberia()
+	b seguir
+borrarArriba:
+	addi $t5, $t5, 1
+	borrarTuberiaArriba($pos)
+	elegirTuberia()
+	
+borrarSuperBaja:
+	addi $t5, $t5,1
+	borrarTuberiaSuperBaja($pos)
+	elegirTuberia()
+	
+seguir:
+
+.end_macro
+
+
+inicio:
+li $s3, 3
+li $t5, 0
+#Dibujar Escenario
+	#1) Piso
+	lw $t0,base
+	addi $t0,$t0,55296 
+	lw $t1,marronTierra
+	pintarFilas($t1,$t0,20)
+	#2) Cielo
+	lw $t0,base
+	addi $t0,$t0,0 
+	lw $t1,azulCielo
+	pintarFilas($t1,$t0,107)
+	
+	#3) Linea Tierra
+	lw $t0,base
+	addi $t0,$t0,54784 
+	lw $t1,marronOscuro
+	pintarFilas($t1,$t0,1)
+	
+	#5) Dibujar Flappy en posición de inicio
+	
+	lw $t0,base
+	addi $t0,$t0,23176
+	dibujarFlappy($t0)
+	
+	elegirTuberia()
+	#6) Movimiento del Flappy
+#Tiempo	
+loop:
+	li $v0,30
+	syscall
+	addi $s0, $a0, 50
+	
+retardo: 
+	lw $t3, 0xffff0000
+	li $v0, 30
+	syscall
+	blt $a0, $s0, no_movimiento
+	moverTuberia($s3, $t8)
+	borrarFlappy($t0)
+	addi $t0, $t0, 512
+	dibujarFlappy($t0)
+	
+	li $v0, 30
+	syscall
+	addi $s0, $a0, 40
+no_movimiento:
+	bne $t3, 1, retardo
+	
+	lw $t2, 0xffff0004
+	beq $t2, 32, pausa
+	beq $t2, 119, arriba
+	b loop
+	
+pausa:
+	lw $t2, 0xffff0000
+	loopPausa:
+		lw $t2, 0xffff0004
+		beq $t2, 112, fin
+		b loopPausa
+	fin:
+		lw $t2, 0xffff0000
+
+arriba:
+	move $t3, $t0
+	addi $t3, $t3, -3584
+	lw $t6, base
+	ble  $t3, $t6, no_subir
+	borrarFlappy($t0)
+	addi $t0, $t0, -3584
+	dibujarFlappy($t0)
+	b retardo
+	
+no_subir:
+	borrarFlappy($t0)
+	addi $t0, $t0, 4096
+	dibujarFlappy($t0)
+	b retardo
+
+final: 
+	li $v0,56
+	la $a0,msgFin
+	move $a1,$t5
+	syscall
+
+	li $v0,50
+	la $a0,msgFin2
+	syscall
+	beq $a0,0,inicio
+
+	li $v0,10
+	syscall
